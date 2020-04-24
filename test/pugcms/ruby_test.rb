@@ -11,8 +11,4 @@ class PugCMS::VersionTest < Minitest::Test
     assert engine.categories != nil
     assert engine.authors != nil
   end
-
-  def test_it_does_something_useful
-    assert false
-  end
 end
