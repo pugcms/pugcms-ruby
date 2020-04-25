@@ -3,26 +3,57 @@ require 'httparty'
 
 module PugCMS
   class BlogEngine
-    include HTTParty
-
-    def initialize(url=nil)
-      self.class.base_uri(url || 'http://localhost:3000/api/v1')
+    class << self
+      attr_accessor :base_uri
+      attr_accessor :logger
     end
 
-    def posts
-      self.class.get('/blog_posts')
+    def self.logger
+      @logger ||= Logger.new($stdout).tap do |log|
+        log.progname = "PugCMS"
+      end
     end
 
-    def authors
-      self.class.get('/blog_authors')
+    def self.base_uri
+      @base_uri ||= "http://localhost:3000/api/v1"
     end
 
-    def tags
-      self.class.get('/blog_tags')
+    # TODO: Add caching here
+    def self.get(path)
+      full_path = self.base_uri + "/" + path
+
+      self.logger.debug(full_path)
+      result = HTTParty.get(full_path)
+
+      if result.code == 200
+        JSON.parse(result.body, object_class: OpenStruct)
+      else
+        raise ArgumentError, "Error de-serializing result from #{full_path}"
+      end
     end
 
-    def categories
-      self.class.get('/blog_categories')
+    def self.posts
+      self.get('/blog_posts')
+    end
+
+    def self.post(slug)
+      self.get("/blog_posts/#{slug}")
+    end
+
+    def self.authors
+      self.get('/blog_authors')
+    end
+
+    def self.author(slug)
+      self.get("/blog_authors/#{slug}")
+    end
+
+    def self.tags
+      self.get('/blog_tags')
+    end
+
+    def self.categories
+      self.get('/blog_categories')
     end
   end
 end
